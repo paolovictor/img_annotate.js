@@ -1,6 +1,7 @@
 div.annotation {
     color: black;
     background: white;
-    margin: 2px;
-    border: white white black black;
+    padding: 2px;
+    border: 1px white white black black;
+    font-size: 10px;
 }
