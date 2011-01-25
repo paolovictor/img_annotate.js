@@ -37,7 +37,7 @@ function _flush_operation_queue(id) {
     }
 }
 
-function _annotate(id, annotation_id, message, area_data) {        
+function _annotate(id, annotation_id, params) {        
     var container = _get_container(id);
     var node = $(id);
    
@@ -48,24 +48,26 @@ function _annotate(id, annotation_id, message, area_data) {
     annotation.style.display = 'none';
     annotation.style.position = 'absolute';
 
-    if(area_data['x']) {
-        annotation.style.left = area_data['x'];
+    if(params['x']) {
+        annotation.style.left = params['x'];
     }
     
-    if(area_data['y']) {
-        annotation.style.top = area_data['y'];
+    if(params['y']) {
+        annotation.style.top = params['y'];
     }
 
-    if(area_data['w']) {
-        annotation.style.width = area_data['w'];
+    if(params['w']) {
+        annotation.style.width = params['w'];
     }
 
-    if(area_data['h']) {
-        annotation.style.height = area_data['h'];
+    if(params['h']) {
+        annotation.style.height = params['h'];
     }
     
-    annotation.innerHTML = message;
-    annotation.alt = message;
+    if(params['text']) {
+        annotation.innerHTML = params["text"];
+        annotation.alt = params["text"];
+    }
                
     container.appendChild(annotation);
 }
@@ -106,7 +108,7 @@ function _hide_annotations(container_id) {
     }
 }
 
-function annotate(id, annotation_id, message, area_data) {       
-    _enqueue_operation(id, function(){_annotate(id, annotation_id, message, area_data)});
+function annotate(id, annotation_id, params) {       
+    _enqueue_operation(id, function(){_annotate(id, annotation_id, params)});
     $(id).onload = function(){_flush_operation_queue(id)};
 }
