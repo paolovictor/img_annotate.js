@@ -1,0 +1,114 @@
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="annotation.css"/>
+    <script type="text/javascript">
+    var ANNOTATION_CLASS='annotation';
+    var annotations = {};
+    var annotationOpQueue = {};
+    
+    function $(id) {
+        return document.getElementById(id);
+    }
+    
+    function _annotation_queue(id, fn) {
+        if(annotationOpQueue[id] == undefined) {
+           annotationOpQueue[id] = new Array(); 
+        }
+        annotationOpQueue[id].push(fn);
+    }
+    
+    function _annotation_flush(id) {
+        if(annotationOpQueue[id] != undefined) {
+            while(annotationOpQueue[id].length > 0) {
+                var fn = annotationOpQueue[id].pop();
+                fn();
+            }
+        }
+    }
+    
+    function annotate(id, annotation_id, message, width, height) {       
+        _annotation_queue(id, function(){_annotate(id, annotation_id, message, width, height)});
+        $(id).onload = function(){_annotation_flush(id)};
+    }
+    
+    function annotate(id, annotation_id, message, width, height, x, y) {
+    //    $(id).onload = function(){_annotate(id, annotation_id, message, width, height, x, y)};
+        _annotation_queue(id, function(){_annotate(id, annotation_id, message, width, height, x, y)});
+        $(id).onload = function(){_annotation_flush(id)};
+    }
+
+    function _annotate(id, annotation_id, message, width, height) {
+        annotate(id, annotation_id, message, width, height, 0, 0);
+    }
+
+    function _annotate(id, annotation_id, message, width, height, x, y) {        
+        container = _get_container(id);
+        node = $(id);
+       
+        annotation = document.createElement('div');        
+        annotation.setAttribute('id', annotation_id);
+        annotation.setAttribute('class', ANNOTATION_CLASS); 
+        
+        // Positionting
+        annotation.style.display = 'none';
+        annotation.style.position = 'absolute';
+        annotation.style.left = x;
+        annotation.style.top = y;
+        annotation.style.width = width;
+        annotation.style.height = height;
+        
+        annotation.innerHTML = message;
+        annotation.zIndex = container.childNodes.length + 1;        
+        annotation.style.cssFloat = "left";
+        
+        // Updating annotation map
+        if(annotations[container.id] == undefined) {
+            annotations[container.id] = {};
+        }
+        annotations[container.id] = annotation;
+               
+        container.appendChild(annotation);
+        container.onmouseover = function(){_show_annotations(container.id)};
+        container.onmouseout = function(){_hide_annotations(container.id)};
+    }
+    
+    function _show_annotations(container_id) {
+        var children = $(container_id).childNodes;
+        for(var i = 0; i < children.length; i++) {
+            children[i].style.display = 'block';
+        }
+    }
+    
+    function _hide_annotations(container_id) {
+        var children = $(container_id).childNodes;
+        for(var i = 0; i < children.length; i++) {
+            children[i].style.display = 'none';
+        }
+    }
+    
+    function _get_container(id) {
+         container = $("#" + id);
+         node = $(id);
+         
+         if(container == undefined) {
+            container = document.createElement('div');
+            container.id = "#" + id;
+            container.style.backgroundImage = 'url(' + node.src + ')';
+            container.style.width = node.width;
+            container.style.height = node.height;            
+            
+            node.parentNode.replaceChild(container, node);
+        }
+        
+        return container;
+    }
+    </script>
+</head>
+<body>
+    <img id="smooch" src="smooch.jpg"></img>
+    
+    <script type="text/javascript">
+        annotate('smooch', 'smooch', 'Test message which is large enough to warp text!!', 100, 100);
+        annotate('smooch', 'smooch2', 'What.', 100, 150, 200, 100);
+    </script>
+</body>

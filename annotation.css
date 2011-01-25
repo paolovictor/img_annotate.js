@@ -1,0 +1,6 @@
+div.annotation {
+    color: black;
+    background: white;
+    margin: 2px;
+    border: white white black black;
+}
