@@ -1,7 +1,23 @@
 /**
  * CSS class configured for annotation DIVs
  */ 
-var Annotate_ANNOTATION_CLASS = 'annotation';
+var ANN_BOX_CLASS = 'annotation';
+
+/**
+ * Default annotation box width. Used when the width is undefined
+ */
+var ANN_DEFAULT_W = 10;
+
+/**
+ * Default annotation box height. Used when the height is undefined
+ */
+var ANN_DEFAULT_H = 10;
+
+/**
+ * Number of annotations, used to define the annotation id. This will be
+ * changed when annotation input is implemented
+ */
+var ANN_COUNT = 0;
 
 /**
  * In order to put the image inside a DIV, I have to know the image's dimensions.
@@ -44,9 +60,8 @@ function _annotate(id, annotation_id, params) {
     annotation = document.createElement('div');        
     
     annotation.id = annotation_id;
-    annotation.setAttribute('class', Annotate_ANNOTATION_CLASS); 
-    annotation.style.display = 'none';
-    annotation.style.position = 'absolute';
+    annotation.className += " " + ANN_BOX_CLASS; 
+    annotation.style.position = 'relative';
 
     if(params['x']) {
         annotation.style.left = params['x'];
@@ -56,17 +71,12 @@ function _annotate(id, annotation_id, params) {
         annotation.style.top = params['y'];
     }
 
-    if(params['w']) {
-        annotation.style.width = params['w'];
-    }
+    annotation.style.width = params['w'] ? params['w'] : ANN_DEFAULT_W;
+    annotation.style.height = params['h'] ? params['h'] : ANN_DEFAULT_H;
 
-    if(params['h']) {
-        annotation.style.height = params['h'];
-    }
-    
     if(params['text']) {
-        annotation.innerHTML = params["text"];
-        annotation.alt = params["text"];
+        annotation.title = params['text'];
+        annotation.alt = params['text'];
     }
                
     container.appendChild(annotation);
@@ -85,30 +95,15 @@ function _get_container(id) {
         container.style.width = node.width;
         container.style.height = node.height;            
 
-        container.onmouseover = function(){_show_annotations(cid)};
-        container.onmouseout = function(){_hide_annotations(cid)};
-
         node.parentNode.replaceChild(container, node);
     }
 
     return container;
 }
 
-function _show_annotations(container_id) {
-    children = $(container_id).childNodes;
-    for(var i = 0; i < children.length; i++) {
-        children[i].style.display = 'block';
-    }
-}
-
-function _hide_annotations(container_id) {
-    var children = $(container_id).childNodes;
-    for(var i = 0; i < children.length; i++) {
-        children[i].style.display = 'none';
-    }
-}
-
-function annotate(id, annotation_id, params) {       
-    _enqueue_operation(id, function(){_annotate(id, annotation_id, params)});
+function annotate(id, params) {       
+    _enqueue_operation(id, function(){_annotate(id, ANN_COUNT, params)});
     $(id).onload = function(){_flush_operation_queue(id)};
+
+    ANN_COUNT++;
 }

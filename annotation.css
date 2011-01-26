@@ -1,7 +1,9 @@
 div.annotation {
-    color: black;
-    background: white;
-    padding: 2px;
-    border: 1px white white black black;
-    font-size: 10px;
+    border: 1px solid;
+    border-color: white black black white;
+}
+
+div.annotation:hover {
+    border: 1px solid;
+    border-color: gray white white gray;
 }
