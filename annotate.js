@@ -1,7 +1,10 @@
 /**
  * CSS class configured for annotation DIVs
  */ 
-var ANN_BOX_CLASS = 'annotation';
+var ANN_BOX_CLASS = 'annotation-box';
+var ANN_LABEL_CLASS = 'annotation-label';
+var ANNOTATIONS = {};
+var ANN_COUNT = 0;
 
 /**
  * Default annotation box width. Used when the width is undefined
@@ -12,12 +15,6 @@ var ANN_DEFAULT_W = 10;
  * Default annotation box height. Used when the height is undefined
  */
 var ANN_DEFAULT_H = 10;
-
-/**
- * Number of annotations, used to define the annotation id. This will be
- * changed when annotation input is implemented
- */
-var ANN_COUNT = 0;
 
 /**
  * In order to put the image inside a DIV, I have to know the image's dimensions.
@@ -53,33 +50,94 @@ function _flush_operation_queue(id) {
     }
 }
 
-function _annotate(id, annotation_id, params) {        
+function _annotate(id, params) {
+    var annotation_id = "ann" + ANN_COUNT;
+
     var container = _get_container(id);
     var node = $(id);
    
+    var ax = params['x'] ? parseInt(params['x']) : 0;
+    var ay = params['y'] ? parseInt(params['y']) : 0;
+    var aw = params['w'] ? parseInt(params['w']) : ANN_DEFAULT_W;
+    var ah = params['h'] ? parseInt(params['h']) : ANN_DEFAULT_H;
+    var text = params['text'];
+
+    // Attaching box to container and updating mouse functions
+    var box = create_annotation_box(annotation_id, ax, ay, aw, ah);
+
+    container.appendChild(box);
+    container.onmouseover = function(){_show_annotations(container.id)};
+    container.onmouseout = function(){_hide_annotations(container.id)};
+
+    // Attaching label to container and updating mouse functions
+    var label = create_annotation_label(annotation_id, ax, ay, aw, ah, text);
+
+    if(label) {
+        box.title = text;
+        box.alt = text;
+        box.onmouseover = function(){$(label.id).style.display = 'block'};
+        box.onmouseout = function(){$(label.id).style.display = 'none'};
+        
+        container.appendChild(label);
+    }
+
+    ANNOTATIONS[annotation_id] = true;
+    ANN_COUNT++;
+}
+
+function create_annotation_box(id, ax, ay, aw, ah) {
     annotation = document.createElement('div');        
     
-    annotation.id = annotation_id;
-    annotation.className += " " + ANN_BOX_CLASS; 
-    annotation.style.position = 'relative';
+    annotation.id = id;
+    annotation.className = ANN_BOX_CLASS; 
+    annotation.style.display = 'none';
+    annotation.style.position = 'absolute';
 
-    if(params['x']) {
-        annotation.style.left = params['x'];
+    annotation.style.left = ax + "px";
+    annotation.style.top = ay + "px";
+    annotation.style.width = aw + "px";
+    annotation.style.height = ah + "px";
+    annotation.style.zIndex = 'auto';
+
+    return annotation;
+}
+
+function create_annotation_label(id, ax, ay, aw, ah, text) {
+    if(text) {
+        var label = document.createElement("div");
+        label.id = id + "_label";
+        label.className = ANN_LABEL_CLASS;
+
+        label.style.display = 'none';
+        label.style.position = 'absolute';
+        label.style.left = (ax + 5) + "px";
+        label.style.top = (ay + ah + 5) + "px";
+        label.style.zIndex = 'auto';
+
+        label.innerHTML = text;
+
+        return label;
     }
+
+    return undefined;
+}
     
-    if(params['y']) {
-        annotation.style.top = params['y'];
+function _show_annotations(container_id) {
+    var children = $(container_id).childNodes;
+    for(var i = 0; i < children.length; i++) {
+        if(ANNOTATIONS[children[i].id]) {
+            children[i].style.display = 'block';
+        }
     }
+}
 
-    annotation.style.width = params['w'] ? params['w'] : ANN_DEFAULT_W;
-    annotation.style.height = params['h'] ? params['h'] : ANN_DEFAULT_H;
-
-    if(params['text']) {
-        annotation.title = params['text'];
-        annotation.alt = params['text'];
+function _hide_annotations(container_id) {
+    var children = $(container_id).childNodes;
+    for(var i = 0; i < children.length; i++) {
+        if(ANNOTATIONS[children[i].id]) {
+            children[i].style.display = 'none';
+        }
     }
-               
-    container.appendChild(annotation);
 }
 
 function _get_container(id) {
@@ -91,9 +149,11 @@ function _get_container(id) {
 
         container = document.createElement('div');
         container.id = cid;
+        container.style.position = 'relative';
+        container.style.display = 'block';
         container.style.backgroundImage = 'url(' + node.src + ')';
         container.style.width = node.width;
-        container.style.height = node.height;            
+        container.style.height = node.height;
 
         node.parentNode.replaceChild(container, node);
     }
@@ -101,9 +161,8 @@ function _get_container(id) {
     return container;
 }
 
-function annotate(id, params) {       
-    _enqueue_operation(id, function(){_annotate(id, ANN_COUNT, params)});
-    $(id).onload = function(){_flush_operation_queue(id)};
 
-    ANN_COUNT++;
+function annotate(id, params) {       
+    _enqueue_operation(id, function(){_annotate(id, params)});
+    $(id).onload = function(){_flush_operation_queue(id)};
 }

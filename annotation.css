@@ -1,9 +1,18 @@
-div.annotation {
+div.annotation-box {
     border: 1px solid;
     border-color: white black black white;
 }
 
-div.annotation:hover {
+div.annotation-box:hover {
     border: 1px solid;
     border-color: gray white white gray;
+}
+
+div.annotation-label {
+    font-family: Helvetica;
+    font-size: 12px;
+
+    background: #F5F7AB;
+    border-radius: 5px;
+    padding: 4px;
 }
